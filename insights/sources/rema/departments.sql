@@ -1,0 +1,1 @@
+select * from rest_api_data_rema.departments;
