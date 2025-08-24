@@ -1,3 +1,2 @@
 [runtime]
 log_level="INFO"
-log_format="JSON"
