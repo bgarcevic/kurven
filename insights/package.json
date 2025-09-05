@@ -1,5 +1,5 @@
 {
-  "name": "my-evidence-project",
+  "name": "kurven",
   "version": "0.0.1",
   "scripts": {
     "build": "EVIDENCE_BUILD_DIR=./build/kurven evidence build",
