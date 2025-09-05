@@ -1,12 +1,14 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: 'main' # or whichever branch you want to deploy from
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./insights
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,7 +22,6 @@ jobs:
         run: npm install
 
       - name: build
-        working-directory: ./insights
         env:
           BASE_PATH: '/${{ github.event.repository.name }}'
         run: |
