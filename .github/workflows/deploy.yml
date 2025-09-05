@@ -28,7 +28,6 @@ jobs:
         with:
           name: rema-duckdb
           path: ./extract/data/rema.duckdb
-          retention-days: 30
   build:
     needs: extract
     runs-on: ubuntu-latest
@@ -49,6 +48,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./insights
 
       - name: build
         env:
