@@ -4,7 +4,33 @@ on:
   workflow_dispatch:
 
 jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+      - name: Install dependencies
+        working-directory: ./extract
+        run: uv sync --frozen
+      - name: Download Previous DuckDB
+        uses: actions/download-artifact@v4
+        with:
+          name: rema-duckdb
+          path: ./extract/data/
+        continue-on-error: true
+      - name: Run Extraction Pipeline
+        working-directory: ./extract
+        run: uv run rema_pipeline.py
+      - name: Upload DuckDB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rema-duckdb
+          path: ./extract/data/rema.duckdb
+          retention-days: 30
   build:
+    needs: extract
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -12,6 +38,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Download DuckDB Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: rema-duckdb
+          path: ./insights/sources/rema/
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
