@@ -14,23 +14,36 @@ title: Rema 1000 oversigt
     <DropdownOption value="%" valueLabel="All Categories"/>
 </Dropdown>
 
-```sql orders_by_category
+```sql products
   select 
-      date_trunc('month', order_datetime) as month,
-      sum(sales) as sales_usd,
-      category
-  from needful_things.orders
-  where category like '${inputs.category.value}'
-  and date_part('year', order_datetime) like '${inputs.year.value}'
-  group by all
-  order by sales_usd desc
+      *
+  from rema.products
+  where department_name ilike '${inputs.category.value}'
+```
+
+
+<BarChart
+    data={products}
+    title="Highest price, {inputs.category.label}"
+    x=name
+    y=pricing__price
+/>
+
+```sql highest_discount_products
+  select 
+      name,
+      pricing__price,
+      pricing__normal_price,
+      pricing__is_on_discount,
+      (1 - (pricing__price/pricing__normal_price)) * 100 as discount
+  from ${products}
+  where pricing__is_on_discount = true
+  order by discount desc
 ```
 
 <BarChart
-    data={orders_by_category}
-    title="Sales by Month, {inputs.category.label}"
-    x=month
-    y=sales_usd
-    series=category
+    data={highest_discount_products}
+    title="Highest discount, {inputs.category.label}"
+    x=name
+    y=discount
 />
-
