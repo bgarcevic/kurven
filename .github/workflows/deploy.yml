@@ -15,10 +15,13 @@ jobs:
         working-directory: ./extract
         run: uv sync --frozen
       - name: Download Previous DuckDB
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v6
         with:
+          workflow: deploy.yml
           name: rema-duckdb
           path: ./extract/data/
+          workflow_conclusion: success
+          branch: main
         continue-on-error: true
       - name: Run Extraction Pipeline
         working-directory: ./extract
