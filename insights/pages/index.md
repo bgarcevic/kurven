@@ -1,7 +1,6 @@
 ---
 title: Rema 1000 oversigt
 ---
-
 ```sql departments
   select
       name
@@ -17,8 +16,6 @@ title: Rema 1000 oversigt
   from rema.products
   where department_name ilike '${inputs.category.value}'
 ```
-
-
 
 <Dropdown data={departments} name=category value=name>
     <DropdownOption value="%" valueLabel="Alle Kategorier"/>
@@ -104,30 +101,58 @@ title: Rema 1000 oversigt
 
 #### **Alle produkter i {inputs.category.label}**
 <DataTable data={products} search=true>
-  <Column id="link" title='Navn' contentType=link openInNewTab=true linkLabel='name' />
+  <Column id="link" title='Navn' contentType=link openInNewTab=true linkLabel='Gå til shop ->' />
+  <Column id="department_name" title="Afdeling" />
+  <Column id="category_name" title="Kategori" />
+  <Column id="name" title="Produktnavn"/>
   <Column id="underline" />
   <Column id="pricing__price" title="Pris" />
+  <Column id="pricing__normal_price" title="Normal pris" />
+  <Column id="pricing__max_quantity" title="Maks antal med rabat" />
+  <Column id="pricing__price_over_max" title="Pris over maks antal" />
+  <Column id="pricing__is_on_discount" title="På tilbud" contentType=boolean />
+  <Column id="pricing__price_per_kilogram" title="Pris per Kg" />
+  <Column id="pricing__price_per_unit" title="Pris per enhed" />
+  <Column id="pricing__is_advertised" title="Annonceret" contentType=boolean />
+  <Column id="pricing__deposit" title="Pant" />
+  <Column id="pricing__deposit__v_double" title="Pant decimal" />
+  <Column id="extra__popularity" title="Popularitet" />
+  <Column id="entering_date" title="Dato" />
+  <Column id="pricing__price_changes_on" title="Pris ændres dato" />
+  <Column id="pricing__price_changes_type" title="Pris ændringstype" />
+  <Column id="assortment_label" title="Sortiment label" />
+  <Column id="max_sales_quantity" title="Maks salgsantal" />
 </DataTable>
 
 
 ```sql highest_discount_products
-  select 
+  select
+      link,
       name,
+      underline,
       pricing__price,
       pricing__normal_price,
       pricing__is_on_discount,
-      (1 - (pricing__price/pricing__normal_price)) * 100 as discount
+      (1 - (pricing__price/pricing__normal_price)) as discount_pct
   from ${products}
   where pricing__is_on_discount = true
-  order by discount desc
+  order by discount_pct desc
 ```
 
 <BarChart
     data={highest_discount_products}
     title="Højeste rabat på tilbud, {inputs.category.label}"
     x=name
-    y=discount
+    y=discount_pct
     yFmt="pct"
 />
 
-<DataTable data={highest_discount_products}/>
+<DataTable data={highest_discount_products} search=true>
+  <Column id="link" title='Link' contentType=link openInNewTab=true linkLabel='Gå til shop ->' />
+  <Column id="name" title="Produktnavn" />
+  <Column id="underline" />
+  <Column id="pricing__price" title="Pris" />
+  <Column id="pricing__normal_price" title="Normal Pris" />
+  <Column id="pricing__is_on_discount" title="På tilbud" contentType=boolean />
+  <Column id="discount_pct" title="Rabat %" />
+</DataTable>
