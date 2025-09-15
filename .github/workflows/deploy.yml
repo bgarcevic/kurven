@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./extract
         run: uv sync --frozen
-      - name: Download Previous DuckDB
+      - name: Download Previous Rema DuckDB
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: deploy.yml
@@ -25,14 +25,31 @@ jobs:
           workflow_conclusion: success
           branch: main
         continue-on-error: true
+      - name: Download Previous Nemlig DuckDB
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: deploy.yml
+          name: nemlig-duckdb
+          path: ./extract/data/
+          workflow_conclusion: success
+          branch: main
+        continue-on-error: true
       - name: Run Extraction Pipeline
         working-directory: ./extract
         run: uv run rema_pipeline.py
-      - name: Upload DuckDB Artifact
+      - name: Run Nemlig Extraction Pipeline
+        working-directory: ./extract
+        run: uv run nemlig_pipeline.py
+      - name: Upload Rema DuckDB Artifact
         uses: actions/upload-artifact@v4
         with:
           name: rema-duckdb
           path: ./extract/data/rema.duckdb
+      - name: Upload Nemlig DuckDB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nemlig-duckdb
+          path: ./extract/data/nemlig.duckdb
   build:
     needs: extract
     runs-on: ubuntu-latest
@@ -44,6 +61,11 @@ jobs:
         with:
           name: rema-duckdb
           path: ./insights/sources/rema/
+      - name: Download Nemlig DuckDB Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nemlig-duckdb
+          path: ./insights/sources/nemlig/
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
