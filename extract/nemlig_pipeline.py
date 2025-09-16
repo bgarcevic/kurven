@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import Any, Dict
+from collections import deque
+from typing import Any, Dict, Iterable, Set
 
 import dlt
 from dlt.sources.helpers import requests
@@ -52,66 +53,112 @@ def _fetch_content(url: str) -> tuple[list[dict], dict]:
 
 
 def get_product_group_ids() -> Dict[str, Any]:
-    _LOGGER.info("Collecting product group IDs from root page")
+    """Collect all product group records by traversing category pages.
+
+    Starting from the root daily-groceries page we follow any discovered
+    category links ("Url" and "SeeMoreLink.Url") breadth‑first. Iteration
+    continues until no further pages produce records containing
+    "ProductGroupId" (i.e. the queue of discovered, unvisited paths is empty).
+
+    For each ProductGroupId we keep the maximum observed TotalProducts and
+    the first non-empty Heading.
+    """
+
+    def _extract_sub_paths(content: Iterable[dict]) -> Set[str]:
+        paths: Set[str] = set()
+        for rec in content:
+            url = rec.get("Url")
+            if isinstance(url, str) and url.startswith("/dagligvarer/"):
+                paths.add(url)
+            sml = rec.get("SeeMoreLink")
+            if isinstance(sml, dict):
+                sml_url = sml.get("Url")
+                if isinstance(sml_url, str) and sml_url.startswith("/dagligvarer/"):
+                    paths.add(sml_url)
+        return paths
+
+    def _merge_records(content: Iterable[dict]) -> int:
+        """Merge product group records into "merged"; return count of *new* PG IDs."""
+        new_count = 0
+        for rec in content:
+            pg_id = rec.get("ProductGroupId")
+            if not isinstance(pg_id, str):
+                continue
+            total = rec.get("TotalProducts") or 0
+            heading = rec.get("Heading") or ""
+            existing = merged.get(pg_id)
+            if not existing:
+                merged[pg_id] = {
+                    "ProductGroupId": pg_id,
+                    "TotalProducts": total,
+                    "Heading": heading,
+                }
+                new_count += 1
+            else:
+                if total > existing["TotalProducts"]:
+                    existing["TotalProducts"] = total
+                if not existing.get("Heading") and heading:
+                    existing["Heading"] = heading
+        return new_count
+
+    _LOGGER.info("Collecting product group IDs (iterative traversal)")
     root_content, settings = _fetch_content(DAGLIG_URL)
     _LOGGER.info(
         "Root page fetched product_groups=%d has_settings=%s",
-        len(root_content),
+        sum(1 for r in root_content if isinstance(r.get("ProductGroupId"), str)),
         bool(settings),
     )
 
-    # Collect sub paths (Url + SeeMoreLink.Url) in one pass
-    sub_paths = {
-        cand
-        for rec in root_content
-        for cand in (
-            (rec.get("Url") if isinstance(rec.get("Url"), str) else None),
-            (
-                rec.get("SeeMoreLink", {}).get("Url")
-                if isinstance(rec.get("SeeMoreLink"), dict)
-                else None
-            ),
-        )
-        if isinstance(cand, str) and cand.startswith("/dagligvarer/")
-    }
-    _LOGGER.info("Discovered sub category paths count=%d", len(sub_paths))
-
-    # Accumulate records from root + all sub pages
-    all_records: list[dict] = list(root_content)
-    for path in sub_paths:
-        full_url = _normalize_url(path)
-        _LOGGER.info("Fetching sub category path=%s", path)
-        content, _ = _fetch_content(full_url)
-        if content:
-            all_records.extend(content)
-            _LOGGER.debug(
-                "Appended records=%d from=%s total_records=%d",
-                len(content),
-                path,
-                len(all_records),
-            )
-
-    # Merge product groups: keep max TotalProducts, keep first non-empty Heading
     merged: dict[str, dict] = {}
-    for rec in all_records:
-        pg_id = rec.get("ProductGroupId")
-        if not isinstance(pg_id, str):
+    total_new = _merge_records(root_content)
+    _LOGGER.info(
+        "Merged initial product groups new=%d total=%d", total_new, len(merged)
+    )
+
+    discovered = _extract_sub_paths(root_content)
+    queue = deque(discovered)
+    visited: Set[str] = set()
+    _LOGGER.info("Initial discovered category paths=%d", len(discovered))
+
+    pages_fetched = 0
+    while queue:
+        path = queue.popleft()
+        if path in visited:
             continue
-        total = rec.get("TotalProducts") or 0
-        heading = rec.get("Heading") or ""
-        existing = merged.get(pg_id)
-        if not existing:
-            merged[pg_id] = {
-                "ProductGroupId": pg_id,
-                "TotalProducts": total,
-                "Heading": heading,
-            }
-        else:
-            if total > existing["TotalProducts"]:
-                existing["TotalProducts"] = total
-            if not existing.get("Heading") and heading:
-                existing["Heading"] = heading
-    _LOGGER.info("Merged distinct product groups=%d", len(merged))
+        visited.add(path)
+        full_url = _normalize_url(path)
+        _LOGGER.info(
+            "Fetching category path=%s (visited=%d queue=%d)",
+            path,
+            len(visited),
+            len(queue),
+        )
+        content, _ = _fetch_content(full_url)
+        pages_fetched += 1
+        if not content:
+            _LOGGER.debug("No content returned path=%s", path)
+            continue
+        new_pg = _merge_records(content)
+        _LOGGER.debug(
+            "Processed path=%s records=%d new_product_groups=%d total_product_groups=%d",
+            path,
+            len(content),
+            new_pg,
+            len(merged),
+        )
+        # Discover further sub paths from this page
+        new_paths = _extract_sub_paths(content)
+        # Only enqueue unvisited & not already queued
+        for p in new_paths:
+            if p not in visited and p not in queue:
+                queue.append(p)
+
+    _LOGGER.info(
+        "Traversal complete pages_fetched=%d distinct_paths=%d product_groups=%d",
+        pages_fetched,
+        len(visited),
+        len(merged),
+    )
 
     return {
         "productGroupIDs": list(merged.values()),
@@ -187,11 +234,10 @@ def load_nemlig() -> None:
     pipeline.run(
         products.iter_arrow(chunk_size=1000),
         table_name="products_history",
-        write_disposition="merge",
+        write_disposition={"disposition": "merge", "strategy": "scd2"},
         primary_key="id",
     )
 
 
 if __name__ == "__main__":
-    # load_nemlig()
-    print(get_product_group_ids())
+    load_nemlig()
