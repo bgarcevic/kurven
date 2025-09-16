@@ -72,6 +72,8 @@ def nemlig_source():
         "resources": [
             {
                 "name": "products",
+                "write_disposition": {"disposition": "merge"},
+                "primary_key": "id",
                 "endpoint": {
                     "method": "GET",
                     "path": f"webapi/{product_group_ids['magicStamp']}/{product_group_ids['timeslot']}/{product_group_ids['magic1']}/{product_group_ids['magic2']}/Products/GetByProductGroupId",
@@ -109,6 +111,14 @@ def load_nemlig() -> None:
 
     load_info = pipeline.run(nemlig_source())
     print(load_info)
+
+    products = pipeline.dataset().products
+    pipeline.run(
+        products.iter_arrow(chunk_size=1000),
+        table_name="products_history",
+        write_disposition="merge",
+        primary_key="id",
+    )
 
 
 if __name__ == "__main__":
