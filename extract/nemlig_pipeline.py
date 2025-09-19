@@ -35,6 +35,27 @@ def _normalize_url(path: str) -> str:
     return url
 
 
+def _sanitize_category_path(path: str) -> str | None:
+    """Return category path without any URL fragment (after '#').
+
+    Some discovered links include a fragment containing a GUID (e.g.
+    /dagligvarer/foo/bar#99191A80-BF8F-4690-ABBA-AD57B193F931) which
+    does not return JSON when requested with GetAsJson=1. We strip the
+    fragment to avoid unnecessary failing requests. If path becomes
+    empty, return None.
+    """
+    if not path:
+        return None
+    if "#" in path:
+        base, _frag = path.split("#", 1)
+        if base != path:
+            _LOGGER.debug(
+                "Stripped fragment from category path original=%s base=%s", path, base
+            )
+        path = base
+    return path or None
+
+
 def _fetch_content(url: str) -> tuple[list[dict], dict]:
     try:
         _LOGGER.info("Fetching content url=%s", url)
@@ -68,13 +89,17 @@ def get_product_group_ids() -> Dict[str, Any]:
         paths: Set[str] = set()
         for rec in content:
             url = rec.get("Url")
-            if isinstance(url, str) and url.startswith("/dagligvarer/"):
-                paths.add(url)
+            if isinstance(url, str):
+                cleaned = _sanitize_category_path(url)
+                if cleaned and cleaned.startswith("/dagligvarer/"):
+                    paths.add(cleaned)
             sml = rec.get("SeeMoreLink")
             if isinstance(sml, dict):
                 sml_url = sml.get("Url")
-                if isinstance(sml_url, str) and sml_url.startswith("/dagligvarer/"):
-                    paths.add(sml_url)
+                if isinstance(sml_url, str):
+                    cleaned = _sanitize_category_path(sml_url)
+                    if cleaned and cleaned.startswith("/dagligvarer/"):
+                        paths.add(cleaned)
         return paths
 
     def _merge_records(content: Iterable[dict]) -> int:
