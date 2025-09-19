@@ -253,7 +253,9 @@ def load_nemlig() -> None:
     )
 
     load_info = pipeline.run(nemlig_source())
-    print(load_info)
+    _LOGGER.info(load_info)
+    _LOGGER.info("Pipeline run completed successfully.")
+    _LOGGER.info(f"Last Trace: {pipeline.last_trace}")
 
     products = pipeline.dataset().products
     pipeline.run(

@@ -1,8 +1,9 @@
-import dlt
 import os
-from typing import Generator, List, Dict, Any
-from dlt.sources.rest_api import RESTAPIConfig, rest_api_resources
+from typing import Any, Dict, Generator, List
+
+import dlt
 from dlt.sources.helpers import requests
+from dlt.sources.rest_api import RESTAPIConfig, rest_api_resources
 
 
 def get_all_category_ids(departments_data):
@@ -93,8 +94,9 @@ def load_rema() -> None:
         dataset_name="rest_api_data_rema",
     )
 
-    load_info = pipeline.run(rema_source())
-    print(load_info)
+    pipeline.run(rema_source())
+    print("Pipeline run completed successfully.")
+    print(f"Last Trace: {pipeline.last_trace}")
 
 
 if __name__ == "__main__":
