@@ -57,7 +57,7 @@ def rema_source():
             categories(),
             {
                 "name": "products",
-                "write_disposition": {"disposition": "merge", "strategy": "scd2"},
+                "write_disposition": "replace",
                 "primary_key": "id",
                 "endpoint": {
                     "path": "https://flwdn2189e-dsn.algolia.net/1/indexes/aws-prod-products/query",
