@@ -16,24 +16,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./extract
         run: uv sync --frozen
-      - name: Download Previous Rema DuckDB
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: deploy.yml
-          name: rema-duckdb
-          path: ./extract/data/
-          workflow_conclusion: success
-          branch: main
-        continue-on-error: true
-      - name: Download Previous Nemlig DuckDB
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: deploy.yml
-          name: nemlig-duckdb
-          path: ./extract/data/
-          workflow_conclusion: success
-          branch: main
-        continue-on-error: true
       - name: Run Extraction Pipeline
         working-directory: ./extract
         run: uv run rema_pipeline.py
