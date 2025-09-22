@@ -257,14 +257,6 @@ def load_nemlig() -> None:
     _LOGGER.info("Pipeline run completed successfully.")
     _LOGGER.info(f"Last Trace: {pipeline.last_trace}")
 
-    products = pipeline.dataset().products
-    pipeline.run(
-        products.iter_arrow(chunk_size=1000),
-        table_name="products_history",
-        write_disposition={"disposition": "merge", "strategy": "scd2"},
-        primary_key="id",
-    )
-
 
 if __name__ == "__main__":
     load_nemlig()
