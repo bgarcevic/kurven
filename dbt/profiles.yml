@@ -1,0 +1,18 @@
+everydai_insights:
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/analytics.duckdb
+      threads: 4
+      attach:
+        - path: ../data/nemlig.duckdb
+        - path: ../data/rema.duckdb
+#
+    prod:
+      type: duckdb
+      path: /app/data/analytics.duckdb
+      threads: 4
+      attach:
+        - path: /app/data/nemlig.duckdb
+        - path: /app/data/rema.duckdb
+  target: dev

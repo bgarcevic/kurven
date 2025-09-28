@@ -1,0 +1,8 @@
+sources:
+  - name: rema
+    database: rema
+    schema: rest_api_data_rema
+    description: "Source data from shop.rema.dk"
+    tables:
+      - name: catalog__categories__items
+        description:  "Items are the products in a category"

@@ -1,0 +1,29 @@
+
+name: 'everydai_insights'
+version: '1.0.0'
+
+profile: 'everydai_insights'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets: 
+  - "target"
+  - "dbt_packages"
+
+vars:
+  rema_1000_store_name: "'REMA 1000'"
+  rema_1000_store_id: "'rema_1000'"
+  nemlig_store_name: "'Nemlig'"
+  nemlig_store_id: "'nemlig'"
+
+models:
+  everydai_insights:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

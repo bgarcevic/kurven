@@ -1,5 +1,6 @@
 import os
 from typing import Any, Dict, Generator, List
+import logging
 
 import dlt
 from dlt.sources.helpers import requests
@@ -30,7 +31,7 @@ def rema_source():
     yield from rest_api_resources(config)
 
 def load_rema() -> None:
-    data_folder_name = "data"
+    data_folder_name = "../data"
     os.makedirs(data_folder_name, exist_ok=True)
 
     pipeline = dlt.pipeline(

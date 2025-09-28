@@ -241,7 +241,7 @@ def nemlig_source():
 
 
 def load_nemlig() -> None:
-    data_folder_name = "data"
+    data_folder_name = "../data"
     os.makedirs(data_folder_name, exist_ok=True)
 
     pipeline = dlt.pipeline(

@@ -1,0 +1,8 @@
+sources:
+  - name: nemlig
+    database: nemlig
+    schema: rest_api_data_nemlig
+    description: "Source data from nemlig"
+    tables:
+      - name: products
+        description:  "Raw products data from nemlig from last EL run"

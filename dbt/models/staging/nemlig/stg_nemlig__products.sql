@@ -1,0 +1,55 @@
+with renamed as (
+    select
+        {{ var('nemlig_store_name') }} as store_name,
+        score,
+        template_name,
+        primary_image as image_url,
+        availability__is_delivery_available,
+        availability__is_available_in_stock,
+        campaign_attribute,
+        id as product_id,
+        name as product_name,
+        category as department_name,
+        brand,
+        sub_category as category_name,
+        url,
+        unit_price as price_per_unit,
+        unit_price_calc as price_per_kilogram,
+        unit_price_label,
+        discount_item,
+        description,
+        sale_before_last_sales_date,
+        price as normal_price,
+        campaign__min_quantity,
+        campaign__max_quantity,
+        campaign__total_price,
+        campaign__various_price_products_campaign,
+        campaign__type as price_changes_type,
+        campaign__code,
+        campaign__discount_savings,
+        campaign__interval_start,
+        campaign__interval_end as price_changes_on,
+        campaign__show_campaign_interval,
+        favorite,
+        product_sub_group_number,
+        product_sub_group_name,
+        product_category_group_number,
+        product_category_group_name,
+        product_main_group_number,
+        product_main_group_name,
+        _dlt_load_id,
+        _dlt_id,
+        campaign__discount_percent,
+        campaign__campaign_unit_price,
+        availability__is_available_few_in_stock,
+        if(
+            campaign__type in ('ProductCampaignDiscountPercent', 'ProductCampaignDiscount', 'ProductCampaignFreeProduct'),
+            nullif(campaign__campaign_price, 0),
+            null
+        ) as current_price,
+        if(current_price is null, false, true) as is_on_discount
+    from {{ source('nemlig', 'products') }}
+    qualify row_number() over (partition by _dlt_load_id, id) = 1
+)
+
+select * from renamed
