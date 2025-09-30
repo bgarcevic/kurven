@@ -3,8 +3,7 @@ with
 renamed as (
     select
         {{ var('rema_1000_store_name') }} as store_name,
-        *
-        {# id as product_id,
+        id as product_id,
         name as product_name,
         underline,
         hf2 as brand,
@@ -39,14 +38,6 @@ renamed as (
         category_name,
         modified_at,
         object_id,
-        _highlight_result__id__value,
-        _highlight_result__id__match_level,
-        _highlight_result__name__value,
-        _highlight_result__name__match_level,
-        _highlight_result__hf2__value,
-        _highlight_result__hf2__match_level,
-        _highlight_result__category_name__value,
-        _highlight_result__category_name__match_level,
         _dlt_load_id,
         _dlt_id,
         pricing__price_changes_on as price_changes_on,
@@ -70,7 +61,7 @@ renamed as (
         max_sales_quantity,
         pricing__consumption_unit,
         pricing__consumption_quantity,
-        gpsr__state_code #}
+        gpsr__state_code
     from {{ source('rema', 'catalog__categories__items') }}
 )
 

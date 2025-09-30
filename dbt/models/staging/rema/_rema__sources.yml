@@ -4,5 +4,10 @@ sources:
     schema: rest_api_data_rema
     description: "Source data from shop.rema.dk"
     tables:
+      - name: catalog
+        description:  "Catalog of products"
+      - name: catalog__categories
+        description:  "Categories of products"
       - name: catalog__categories__items
         description:  "Items are the products in a category"
+      
