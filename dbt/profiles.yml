@@ -1,4 +1,4 @@
-everydai_insights:
+kurven_insights:
   outputs:
     dev:
       type: duckdb

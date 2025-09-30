@@ -62,7 +62,7 @@ renamed as (
         pricing__consumption_unit,
         pricing__consumption_quantity,
         gpsr__state_code
-    from {{ source('rema', 'catalog__categories__items') }}
+    from {{ source('rema', 'products') }}
 )
 
 select * from renamed

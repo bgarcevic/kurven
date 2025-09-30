@@ -1,8 +1,8 @@
 
-name: 'everydai_insights'
+name: 'kurven_insights'
 version: '1.0.0'
 
-profile: 'everydai_insights'
+profile: 'kurven_insights'
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -22,7 +22,7 @@ vars:
   nemlig_store_id: "'nemlig'"
 
 models:
-  everydai_insights:
+  kurven_insights:
     staging:
       +materialized: view
     marts:
