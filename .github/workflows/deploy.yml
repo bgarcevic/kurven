@@ -26,12 +26,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rema-duckdb
-          path: ./extract/data/rema.duckdb
+          path: ./data/rema.duckdb
       - name: Upload Nemlig DuckDB Artifact
         uses: actions/upload-artifact@v4
         with:
           name: nemlig-duckdb
-          path: ./extract/data/nemlig.duckdb
+          path: ./data/nemlig.duckdb
   build:
     needs: extract
     runs-on: ubuntu-latest
